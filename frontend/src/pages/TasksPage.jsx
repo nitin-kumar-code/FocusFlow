@@ -12,7 +12,7 @@ export default function Dashboard() {
       try {
         const token = localStorage.getItem("token");
 
-        const res = await fetch("http://localhost:5001/api/tasks", {
+        const res = await fetch("https://focusflow-icfj.onrender.com/api/tasks", {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -44,7 +44,7 @@ setTasks(normalizedTasks);
     try {
       const token = localStorage.getItem("token");
 
-      const res = await fetch("http://localhost:5001/api/tasks", {
+      const res = await fetch("https://focusflow-icfj.onrender.com/api/tasks", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -76,7 +76,7 @@ setTasks(prev => [normalizedTask, ...prev]);
       const token = localStorage.getItem("token");
 
       const res = await fetch(
-        `http://localhost:5001/api/tasks/${taskId}`,
+        `https://focusflow-icfj.onrender.com/api/tasks/${taskId}`,
         {
           method: "PATCH",
           headers: {
@@ -117,7 +117,7 @@ setTasks(prev =>
       const token = localStorage.getItem("token");
 
       const res = await fetch(
-        `http://localhost:5001/api/tasks/${taskId}`,
+        `https://focusflow-icfj.onrender.com/api/tasks/${taskId}`,
         {
           method: "DELETE",
           headers: {

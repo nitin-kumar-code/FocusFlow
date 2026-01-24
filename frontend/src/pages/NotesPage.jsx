@@ -12,7 +12,7 @@ export default function NotesPage() {
     const fetchNotes = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await fetch("http://localhost:5001/api/notes", {
+        const res = await fetch("https://focusflow-icfj.onrender.com/api/notes", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -46,7 +46,7 @@ export default function NotesPage() {
     try {
       const token = localStorage.getItem("token");
 
-      const res = await fetch("http://localhost:5001/api/notes", {
+      const res = await fetch("https://focusflow-icfj.onrender.com/api/notes", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -80,7 +80,7 @@ export default function NotesPage() {
       const token = localStorage.getItem("token");
 
       const res = await fetch(
-        `http://localhost:5001/api/notes/${id}`,
+        `https://focusflow-icfj.onrender.com/api/notes/${id}`,
         {
           method: "DELETE",
           headers: {

@@ -12,10 +12,10 @@ export default function Dashboard() {
       const token = localStorage.getItem("token");
 
       const [tasksRes, notesRes] = await Promise.all([
-        fetch("http://localhost:5001/api/tasks", {
+        fetch("https://focusflow-icfj.onrender.com/api/tasks", {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch("http://localhost:5001/api/notes", {
+        fetch("https://focusflow-icfj.onrender.com/api/notes", {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);
@@ -27,7 +27,11 @@ export default function Dashboard() {
       const tasksData = await tasksRes.json();
       const notesData = await notesRes.json();
 
-      setTasks(tasksData);
+      const normalizedTasks = tasksData.map(task => ({
+  ...task,
+  dueDate: task.due_date,
+}));
+setTasks(normalizedTasks);
       setNotes(notesData);
     } catch (err) {
       console.error(err);
