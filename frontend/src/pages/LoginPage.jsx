@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import apiFetch from "../services/api";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -15,7 +16,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("https://focusflow-icfj.onrender.com/api/auth/login", {
+      const res = await apiFetch("/api/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

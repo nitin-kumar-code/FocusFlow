@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import TaskCard from "../components/TaskCard";
 import AddTaskForm from "../components/AddTaskForm";
+import apiFetch from "../services/api";
 
 export default function Dashboard() {
   const [tasks, setTasks] = useState([]);
@@ -10,24 +11,13 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchTasks = async () => {
       try {
-        const token = localStorage.getItem("token");
-
-        const res = await fetch("https://focusflow-icfj.onrender.com/api/tasks", {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (!res.ok) {
-          throw new Error("Failed to fetch tasks");
-        }
-
-        const data = await res.json();
-        const normalizedTasks = data.map(task => ({
-  ...task,
-  dueDate: task.due_date,
-}));
+        const data = await apiFetch("/api/tasks");
+        const normalizedTasks = Array.isArray(data)
+          ? data.map(task => ({
+              ...task,
+              dueDate: task.due_date,
+            }))
+          : [];
 setTasks(normalizedTasks);
 
       } catch (err) {
@@ -42,22 +32,11 @@ setTasks(normalizedTasks);
 
   const handleAddTask = async ({ title, dueDate }) => {
     try {
-      const token = localStorage.getItem("token");
-
-      const res = await fetch("https://focusflow-icfj.onrender.com/api/tasks", {
+      const newTask = await apiFetch("/api/tasks", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ title, dueDate }),
+        body: { title, dueDate },
       });
 
-      if (!res.ok) {
-        throw new Error("Failed to create task");
-      }
-
-      const newTask = await res.json();
       const normalizedTask = {
   ...newTask,
   dueDate: newTask.due_date,
@@ -73,25 +52,10 @@ setTasks(prev => [normalizedTask, ...prev]);
       const newStatus =
         currentStatus === "pending" ? "completed" : "pending";
 
-      const token = localStorage.getItem("token");
-
-      const res = await fetch(
-        `https://focusflow-icfj.onrender.com/api/tasks/${taskId}`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ status: newStatus }),
-        }
-      );
-
-      if (!res.ok) {
-        throw new Error("Failed to update task");
-      }
-
-      const updatedTask = await res.json();
+   const updatedTask = await apiFetch(`/api/tasks/${taskId}`, {
+        method: "PATCH",
+        body: { status: newStatus },
+      });
 
       const normalizedUpdatedTask = {
   ...updatedTask,
@@ -103,7 +67,6 @@ setTasks(prev =>
     task.id === taskId ? normalizedUpdatedTask : task
   )
 );
-
     } catch (err) {
       alert(err.message);
     }
@@ -114,22 +77,9 @@ setTasks(prev =>
     if (!confirmDelete) return;
 
     try {
-      const token = localStorage.getItem("token");
-
-      const res = await fetch(
-        `https://focusflow-icfj.onrender.com/api/tasks/${taskId}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (!res.ok) {
-        throw new Error("Failed to delete task");
-      }
-
+      await apiFetch(`/api/tasks/${taskId}`, {
+        method: "DELETE",
+      });
       setTasks(prev => prev.filter(task => task.id !== taskId));
     } catch (err) {
       alert(err.message);

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import apiFetch from "../services/api";
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -26,7 +27,7 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("https://focusflow-icfj.onrender.com/api/auth/register", {
+      const res = await apiFetch("/api/auth/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

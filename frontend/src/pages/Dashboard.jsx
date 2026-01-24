@@ -1,5 +1,6 @@
  import { useEffect, useState } from "react";
  import { Link } from "react-router-dom";
+ import apiFetch from "../services/api";
 
 export default function Dashboard() {
   const [tasks, setTasks] = useState([]);
@@ -11,28 +12,18 @@ export default function Dashboard() {
     try {
       const token = localStorage.getItem("token");
 
-      const [tasksRes, notesRes] = await Promise.all([
-        fetch("https://focusflow-icfj.onrender.com/api/tasks", {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        fetch("https://focusflow-icfj.onrender.com/api/notes", {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-      ]);
-
-      if (!tasksRes.ok || !notesRes.ok) {
-        throw new Error("Failed to fetch dashboard data");
-      }
-
-      const tasksData = await tasksRes.json();
-      const notesData = await notesRes.json();
-
-      const normalizedTasks = tasksData.map(task => ({
+      const [tasksData, notesData] = await Promise.all([
+      apiFetch("/api/tasks"),
+      apiFetch("/api/notes"),
+   ]);
+   
+const normalizedTasks = tasksData.map(task => ({
   ...task,
   dueDate: task.due_date,
 }));
+
 setTasks(normalizedTasks);
-      setNotes(notesData);
+     setNotes(notesData);
     } catch (err) {
       console.error(err);
     } finally {

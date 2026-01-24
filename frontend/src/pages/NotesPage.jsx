@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import NoteCard from "../components/NoteCard";
+import apiFetch from "../services/api";
 
 export default function NotesPage() {
   const [notes, setNotes] = useState([]);
@@ -9,95 +10,76 @@ export default function NotesPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const fetchNotes = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const res = await fetch("https://focusflow-icfj.onrender.com/api/notes", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (!res.ok) {
-          throw new Error("Failed to fetch notes");
-        }
-
-        const data = await res.json();
-        setNotes(data);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchNotes();
-  }, []);
-
-  const handleAddNote = async (e) => {
-    e.preventDefault();
-    setError("");
-
-    if (!title.trim() && !content.trim()) {
-      setError("Title or content is required");
-      return;
-    }
-
+  const fetchNotes = async () => {
     try {
-      const token = localStorage.getItem("token");
+      const data = await apiFetch("/api/notes");
 
-      const res = await fetch("https://focusflow-icfj.onrender.com/api/notes", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          title: title.trim(),
-          content: content.trim(),
-        }),
-      });
+      const normalizedNotes = Array.isArray(data)
+        ? data.map(note => ({
+            ...note,
+            updatedAt: note.updated_at,
+            createdAt: note.created_at,
+          }))
+        : [];
 
-      if (!res.ok) {
-        throw new Error("Failed to create note");
-      }
-
-      const newNote = await res.json();
-      setNotes((prev) => [newNote, ...prev]);
-
-      setTitle("");
-      setContent("");
+      setNotes(normalizedNotes);
     } catch (err) {
       setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleDeleteNote = async (id) => {
-    const confirmDelete = window.confirm("Delete this note?");
-    if (!confirmDelete) return;
+  fetchNotes();
+}, []);
 
-    try {
-      const token = localStorage.getItem("token");
+  
+  const handleAddNote = async (e) => {
+  e.preventDefault();
+  setError("");
 
-      const res = await fetch(
-        `https://focusflow-icfj.onrender.com/api/notes/${id}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+  if (!title.trim() && !content.trim()) {
+    setError("Title or content is required");
+    return;
+  }
 
-      if (!res.ok) {
-        throw new Error("Failed to delete note");
-      }
+  try {
+    const newNote = await apiFetch("/api/notes", {
+      method: "POST",
+      body: {
+        title: title.trim(),
+        content: content.trim(),
+      },
+    });
 
-      setNotes((prev) => prev.filter((note) => note.id !== id));
-    } catch (err) {
-      alert(err.message);
-    }
-  };
+    const normalizedNote = {
+  ...newNote,
+  updatedAt: newNote.updated_at,
+  createdAt: newNote.created_at,
+};
+
+    setNotes(prev => [newNote, ...prev]);
+    setTitle("");
+    setContent("");
+  } catch (err) {
+    setError(err.message);
+  }
+};
+
+        const handleDeleteNote = async (id) => {
+  const confirmDelete = window.confirm("Delete this note?");
+  if (!confirmDelete) return;
+
+  try {
+    await apiFetch(`/api/notes/${id}`, {
+      method: "DELETE",
+    });
+
+    setNotes(prev => prev.filter(note => note.id !== id));
+  } catch (err) {
+    alert(err.message);
+  }
+};
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -157,7 +139,7 @@ export default function NotesPage() {
         )}
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-  {notes.map(note => (
+  {notes && notes.map(note => (
     <NoteCard
       key={note.id}
       id={note.id}

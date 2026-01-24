@@ -10,7 +10,7 @@ export const listNotes = async (req, res) => {
   try {
     const userId = req.user.id;
     const notes = await getNotesByUserId(userId);
-    res.status(200).json(notes);
+    res.status(200).json(Array.isArray(notes) ? notes : []);
   } catch (err) {
     console.error("listNotes error:", err);
     res.status(500).json({ message: "Server error" });
