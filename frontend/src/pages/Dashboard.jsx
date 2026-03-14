@@ -1,42 +1,21 @@
- import { useEffect, useState } from "react";
  import { Link } from "react-router-dom";
- import apiFetch from "../services/api";
-
+ import { useGetNotesQuery } from "../features/notes/notesApi";
+ import { useGetTasksQuery } from "../features/tasks/tasksApi";
+ 
 export default function Dashboard() {
-  const [tasks, setTasks] = useState([]);
-  const [notes, setNotes] = useState([]);
-  const [loading, setLoading] = useState(true);
+  
+   const { data:tasks =[], isLoading: tasksloading } = useGetTasksQuery();
+    const { data:notes =[], isLoading: notesloading } = useGetNotesQuery();
+    
+  const loading = tasksloading || notesloading;
+  
+  const normalizedTasks = tasks.map(tasks => ({
+    ...tasks,
+    dueDate: tasks.due_date,
+  }));
 
-  useEffect(() => {
-  const fetchOverview = async () => {
-    try {
-      const token = localStorage.getItem("token");
-
-      const [tasksData, notesData] = await Promise.all([
-      apiFetch("/api/tasks"),
-      apiFetch("/api/notes"),
-   ]);
-   
-const normalizedTasks = tasksData.map(task => ({
-  ...task,
-  dueDate: task.due_date,
-}));
-
-setTasks(normalizedTasks);
-     setNotes(notesData);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  fetchOverview();
-}, []);
-
-
-  const total = tasks.length;
-  const completed = tasks.filter(t => t.status === "completed").length;
+  const total = normalizedTasks.length;
+  const completed = normalizedTasks.filter(t => t.status === "completed").length;
   const pending = total - completed;
   const completionRate =
     total === 0 ? 0 : Math.round((completed / total) * 100);

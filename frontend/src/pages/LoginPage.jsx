@@ -1,42 +1,25 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import apiFetch from "../services/api";
+import { useLoginMutation } from "../features/auth/authApi";
 
 export default function LoginPage() {
   const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  
+  const [login, { isLoading }] = useLoginMutation();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    setLoading(true);
 
     try {
-      const res = await apiFetch("/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.message || "Login failed");
-        return;
-      }
-
-      localStorage.setItem("token", data.token);
+      const result = await login({ email, password }).unwrap();
+      localStorage.setItem("token", result.token);
       navigate("/dashboard");
     } catch (err) {
-      setError("Server error");
-    } finally {
-      setLoading(false);
+      setError(err?.data?.message || "Login failed");
     }
   };
 
@@ -69,10 +52,9 @@ export default function LoginPage() {
         />
 
         <button
-          disabled={loading}
           className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
         >
-          {loading ? "Logging in..." : "Login"}
+          {isLoading ? "Logging in..." : "Login"}
         </button>
       </form>
     </div>

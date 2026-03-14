@@ -1,37 +1,19 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import NoteCard from "../components/NoteCard";
-import apiFetch from "../services/api";
+
+import {
+  useGetNotesQuery,
+  useAddNoteMutation,
+  useDeleteNoteMutation,
+} from "../features/notes/notesApi";
 
 export default function NotesPage() {
-  const [notes, setNotes] = useState([]);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const { data: notes = [], isLoading, error } = useGetNotesQuery();
 
-  useEffect(() => {
-  const fetchNotes = async () => {
-    try {
-      const data = await apiFetch("/api/notes");
-
-      const normalizedNotes = Array.isArray(data)
-        ? data.map(note => ({
-            ...note,
-            updatedAt: note.updated_at,
-            createdAt: note.created_at,
-          }))
-        : [];
-
-      setNotes(normalizedNotes);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  fetchNotes();
-}, []);
+  const [addNote] = useAddNoteMutation();
+  const [deleteNote] = useDeleteNoteMutation();
 
   
   const handleAddNote = async (e) => {
@@ -44,21 +26,10 @@ export default function NotesPage() {
   }
 
   try {
-    const newNote = await apiFetch("/api/notes", {
-      method: "POST",
-      body: {
-        title: title.trim(),
-        content: content.trim(),
-      },
+    await addNote({
+      title: title.trim(),
+      content: content.trim(),
     });
-
-    const normalizedNote = {
-  ...newNote,
-  updatedAt: newNote.updated_at,
-  createdAt: newNote.created_at,
-};
-
-    setNotes(prev => [newNote, ...prev]);
     setTitle("");
     setContent("");
   } catch (err) {
@@ -66,20 +37,16 @@ export default function NotesPage() {
   }
 };
 
-        const handleDeleteNote = async (id) => {
-  const confirmDelete = window.confirm("Delete this note?");
+  const handleDeleteNote = async (id) => {
+    const confirmDelete = window.confirm("Delete this note?");
   if (!confirmDelete) return;
 
   try {
-    await apiFetch(`/api/notes/${id}`, {
-      method: "DELETE",
-    });
-
-    setNotes(prev => prev.filter(note => note.id !== id));
+    await deleteNote(id);
   } catch (err) {
     alert(err.message);
-  }
-};
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -127,9 +94,9 @@ export default function NotesPage() {
           )}
         </form>
 
-        {loading && <p className="text-gray-500">Loading notes…</p>}
+        {isLoading && <p className="text-gray-500">Loading notes…</p>}
 
-        {!loading && notes.length === 0 && (
+        {!isLoading && notes.length === 0 && (
           <div className="rounded-xl border border-dashed border-gray-300 p-8 text-center text-gray-500">
      <p className="font-medium">No notes yet</p>
      <p className="text-sm mt-1">
@@ -139,17 +106,17 @@ export default function NotesPage() {
         )}
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-  {notes && notes.map(note => (
-    <NoteCard
-      key={note.id}
-      id={note.id}
-      title={note.title}
-      content={note.content}
-      onDelete={handleDeleteNote}
-    />
-  ))}
-</div>
+    { notes.map(note => (
+        <NoteCard
+          key={note.id}
+          id={note.id}
+          title={note.title}
+          content={note.content}
+          onDelete={handleDeleteNote}
+        />
+      ))}
       </div>
-    </div>
+     </div>
+  </div>
   );
 }

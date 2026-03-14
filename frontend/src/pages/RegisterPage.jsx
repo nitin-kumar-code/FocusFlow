@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import apiFetch from "../services/api";
+import { useRegisterMutation } from "../features/auth/authApi";
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -11,8 +11,7 @@ export default function RegisterPage() {
     password: "",
   });
 
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [register, { isLoading }] = useRegisterMutation();
 
   const handleChange = (e) => {
     setFormData({
@@ -24,30 +23,14 @@ export default function RegisterPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    setLoading(true);
 
     try {
-      const res = await apiFetch("/api/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
+    await register(formData).unwrap();
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.message || "Registration failed");
-        return;
-      }
-
-      alert("Registration successful!");
-      navigate("/login");
+    alert("Registration successful!");
+    navigate("/login");
     } catch (err) {
-      setError("Server error");
-    } finally {
-      setLoading(false);
+      setError(err?.data?.message || "Registration failed");
     }
   };
 
@@ -91,10 +74,9 @@ export default function RegisterPage() {
         />
 
         <button
-          disabled={loading}
           className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
         >
-          {loading ? "Creating..." : "Register"}
+          {isLoading ? "Creating..." : "Register"}
         </button>
       </form>
     </div>

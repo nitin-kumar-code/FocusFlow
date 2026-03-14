@@ -1,47 +1,23 @@
-import { useEffect, useState } from "react";
 import TaskCard from "../components/TaskCard";
 import AddTaskForm from "../components/AddTaskForm";
-import apiFetch from "../services/api";
 
-export default function Dashboard() {
-  const [tasks, setTasks] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+import {
+  useGetTasksQuery,
+  useAddTaskMutation,
+  useUpdateTaskMutation,
+  useDeleteTaskMutation,
+} from "../features/tasks/tasksApi";
 
-  useEffect(() => {
-    const fetchTasks = async () => {
-      try {
-        const data = await apiFetch("/api/tasks");
-        const normalizedTasks = Array.isArray(data)
-          ? data.map(task => ({
-              ...task,
-              dueDate: task.due_date,
-            }))
-          : [];
-setTasks(normalizedTasks);
+export default function TasksPage() {
+  const { data: tasks = [], isLoading: loading, error } = useGetTasksQuery();
 
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTasks();
-  }, []);
+  const [addTask] = useAddTaskMutation();
+  const [updateTask] = useUpdateTaskMutation();
+  const [deleteTask] = useDeleteTaskMutation();
 
   const handleAddTask = async ({ title, dueDate }) => {
     try {
-      const newTask = await apiFetch("/api/tasks", {
-        method: "POST",
-        body: { title, dueDate },
-      });
-
-      const normalizedTask = {
-  ...newTask,
-  dueDate: newTask.due_date,
-};
-setTasks(prev => [normalizedTask, ...prev]);
+      await addTask({ title, dueDate });
     } catch (err) {
       alert(err.message);
     }
@@ -52,21 +28,10 @@ setTasks(prev => [normalizedTask, ...prev]);
       const newStatus =
         currentStatus === "pending" ? "completed" : "pending";
 
-   const updatedTask = await apiFetch(`/api/tasks/${taskId}`, {
-        method: "PATCH",
-        body: { status: newStatus },
+      await updateTask({
+        id: taskId,
+        status: newStatus,
       });
-
-      const normalizedUpdatedTask = {
-  ...updatedTask,
-  dueDate: updatedTask.due_date,
-};
-
-setTasks(prev =>
-  prev.map(task =>
-    task.id === taskId ? normalizedUpdatedTask : task
-  )
-);
     } catch (err) {
       alert(err.message);
     }
@@ -77,10 +42,7 @@ setTasks(prev =>
     if (!confirmDelete) return;
 
     try {
-      await apiFetch(`/api/tasks/${taskId}`, {
-        method: "DELETE",
-      });
-      setTasks(prev => prev.filter(task => task.id !== taskId));
+      await deleteTask(taskId);
     } catch (err) {
       alert(err.message);
     }
@@ -90,7 +52,7 @@ setTasks(prev =>
     <div className="min-h-screen bg-gray-50">
       <div className="mx-auto max-w-4xl px-6 py-10">
         <h1 className="text-3xl font-semibold text-gray-950 mb-2">
-            Tasks
+          Tasks
         </h1>
         <p className="text-gray-600 mb-8">
           Manage your tasks and stay productive.
@@ -103,7 +65,7 @@ setTasks(prev =>
         )}
 
         {error && (
-          <p className="text-red-600">{error}</p>
+          <p className="text-red-600">Error loading tasks</p>
         )}
 
         <div className="grid gap-4">
@@ -125,4 +87,4 @@ setTasks(prev =>
       </div>
     </div>
   );
-} 
+}
